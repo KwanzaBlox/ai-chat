@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0f1115">
+  <title>Наш ИИ-чат</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Экран настройки (если не заполнен config.js) -->
+  <section id="view-setup" class="center hidden">
+    <div class="card">
+      <h1>Нужна настройка</h1>
+      <p>Открой <code>config.js</code> и вставь <b>SUPABASE_URL</b> и <b>SUPABASE_ANON_KEY</b>. Подробности в README.</p>
+    </div>
+  </section>
+
+  <!-- Экран входа -->
+  <section id="view-auth" class="center hidden">
+    <form id="auth-form" class="card" autocomplete="on">
+      <h1>Наш ИИ-чат</h1>
+      <div class="tabs">
+        <button type="button" id="tab-login" class="tab active">Вход</button>
+        <button type="button" id="tab-register" class="tab">Регистрация</button>
+      </div>
+      <input id="auth-name" type="text" placeholder="Имя (как тебя видит друг)" class="hidden" autocomplete="nickname">
+      <input id="auth-email" type="email" placeholder="Email" required autocomplete="email">
+      <input id="auth-pass" type="password" placeholder="Пароль (мин. 6 символов)" required minlength="6" autocomplete="current-password">
+      <button id="auth-submit" class="primary" type="submit">Войти</button>
+      <p id="auth-msg" class="msg"></p>
+    </form>
+  </section>
+
+  <!-- Основное приложение -->
+  <section id="view-app" class="app hidden">
+    <aside id="sidebar" class="sidebar">
+      <div class="side-head">
+        <div class="me"><span id="me-name">…</span></div>
+        <div class="side-actions">
+          <button id="btn-settings" class="icon" title="Настройки">⚙</button>
+          <button id="btn-logout" class="icon" title="Выйти">⎋</button>
+        </div>
+      </div>
+      <button id="btn-new" class="primary wide">+ Новый чат</button>
+      <nav id="chat-list" class="chat-list"></nav>
+    </aside>
+    <div id="backdrop" class="backdrop"></div>
+
+    <main class="main">
+      <header class="chat-head">
+        <button id="btn-menu" class="icon menu" title="Чаты">☰</button>
+        <div class="chat-title">
+          <strong id="chat-title">Выбери чат</strong>
+          <small id="chat-sub"></small>
+        </div>
+        <button id="btn-del-chat" class="icon hidden" title="Удалить чат">🗑</button>
+      </header>
+
+      <div id="messages" class="messages"></div>
+
+      <footer class="composer">
+        <div class="composer-row">
+          <select id="provider" title="Какой ИИ отвечает">
+            <option value="gemini">Gemini</option>
+            <option value="openai">OpenAI</option>
+          </select>
+          <textarea id="input" rows="1" placeholder="Сообщение…"></textarea>
+          <button id="btn-send" class="primary">➤</button>
+        </div>
+        <small id="hint" class="hint"></small>
+      </footer>
+    </main>
+  </section>
+
+  <!-- Диалог: новый чат -->
+  <dialog id="dlg-new">
+    <form method="dialog" id="form-new" class="dlg">
+      <h2>Новый чат</h2>
+      <input id="new-title" type="text" placeholder="Название" required maxlength="60">
+      <label class="radio"><input type="radio" name="kind" value="shared" checked> <span><b>Общий</b> — видите оба и оба можете писать ИИ</span></label>
+      <label class="radio"><input type="radio" name="kind" value="private"> <span><b>Личный</b> — видишь только ты</span></label>
+      <div class="dlg-actions">
+        <button type="button" id="new-cancel">Отмена</button>
+        <button type="submit" class="primary">Создать</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Диалог: настройки -->
+  <dialog id="dlg-settings">
+    <form method="dialog" id="form-settings" class="dlg">
+      <h2>Настройки (только в этом браузере)</h2>
+      <p class="note">Ключи хранятся в localStorage твоего браузера и уходят только напрямую к Google/OpenAI. Другу они не видны.</p>
+
+      <label>Gemini API-ключ
+        <input id="set-key-gemini" type="password" autocomplete="off" placeholder="AIza…">
+      </label>
+      <label>Модель Gemini
+        <input id="set-model-gemini" list="models-gemini" type="text">
+        <datalist id="models-gemini"><option value="gemini-2.5-flash"><option value="gemini-2.5-pro"></datalist>
+      </label>
+
+      <label>OpenAI API-ключ
+        <input id="set-key-openai" type="password" autocomplete="off" placeholder="sk-…">
+      </label>
+      <label>Модель OpenAI
+        <input id="set-model-openai" list="models-openai" type="text">
+        <datalist id="models-openai"><option value="gpt-4o-mini"><option value="gpt-4o"></datalist>
+      </label>
+
+      <label>Системная инструкция (необязательно)
+        <textarea id="set-system" rows="3" placeholder="Например: отвечай кратко и по-русски"></textarea>
+      </label>
+
+      <div class="dlg-actions">
+        <button type="button" id="set-cancel">Закрыть</button>
+        <button type="submit" class="primary">Сохранить</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div id="toast" class="toast"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
+  <script src="config.js"></script>
+  <script src="demo.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
